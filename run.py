@@ -16,8 +16,10 @@ from mpi4py import MPI
 
 from auxiliary_tasks import FeatureExtractor, InverseDynamics, VAE, JustPixels
 from cnn_policy import CnnPolicy
+from collect_gym_dataset import CollectGymDataset
 from cppo_agent import PpoOptimizer
 from dynamics import Dynamics, UNet
+from sticky_action_env import StickyActionEnv
 from utils import random_agent_ob_mean_std
 from wrappers import MontezumaInfoWrapper, make_mario_env, make_robo_pong, make_robo_hockey, \
     make_multi_pong, AddRandomStateToInfo, MaxAndSkipEnv, ProcessFrame84, ExtraTimeLimit
@@ -120,15 +122,20 @@ class Trainer(object):
 
 def make_env_all_params(rank, add_monitor, args):
     if args["env_kind"] == 'atari':
+        # fundamental env stuff
         env = gym.make(args['env'])
         assert 'NoFrameskip' in env.spec.id
         env = NoopResetEnv(env, noop_max=args['noop_max'])
+        env = StickyActionEnv(env)
         env = MaxAndSkipEnv(env, skip=4)
+        if 'Montezuma' in args['env']:
+            env = MontezumaInfoWrapper(env)
+        env = CollectGymDataset(env, args['ep_path'])
+
+        # agent-specific wrappers
         env = ProcessFrame84(env, crop=False)
         env = FrameStack(env, 4)
         env = ExtraTimeLimit(env, args['max_episode_steps'])
-        if 'Montezuma' in args['env']:
-            env = MontezumaInfoWrapper(env)
         env = AddRandomStateToInfo(env)
     elif args["env_kind"] == 'mario':
         env = make_mario_env()
@@ -167,6 +174,7 @@ def add_environments_params(parser):
     parser.add_argument('--max-episode-steps', help='maximum number of timesteps for episode', default=4500, type=int)
     parser.add_argument('--env_kind', type=str, default="atari")
     parser.add_argument('--noop_max', type=int, default=30)
+    parser.add_argument('--ep_path', type=str)
 
 
 def add_optimization_params(parser):
