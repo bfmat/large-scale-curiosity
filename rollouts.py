@@ -129,7 +129,22 @@ class Rollout(object):
         if all_ep_infos:
             all_ep_infos = [i_[1] for i_ in all_ep_infos]  # remove the step_count
             keys_ = all_ep_infos[0].keys()
-            all_ep_infos = {k: [i[k] for i in all_ep_infos] for k in keys_}
+
+            # This has to be done because sometimes the key k is not found in i, so it will crash the script
+            # Previous solution:
+            # all_ep_infos = {k: [i[k] for i in all_ep_infos] for k in keys_}
+            all_ep_infos_dict = {k: [] for k in keys_}
+            for i in all_ep_infos:
+                # If even one key is not found, just skip the whole episode
+                keys_found = True
+                for k in keys_:
+                    if k not in i:
+                        keys_found = False
+                if not keys_found:
+                    continue
+                for k in keys_:
+                    all_ep_infos_dict[k].append(i[k])
+            all_ep_infos = all_ep_infos_dict
 
             self.statlists['eprew'].extend(all_ep_infos['r'])
             self.stats['eprew_recent'] = np.mean(all_ep_infos['r'])
