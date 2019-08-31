@@ -18,6 +18,7 @@ from auxiliary_tasks import FeatureExtractor, InverseDynamics, VAE, JustPixels
 from cnn_policy import CnnPolicy
 from collect_gym_dataset import CollectGymDataset
 from cppo_agent import PpoOptimizer
+from dmlab_utils import make_dmlab
 from dynamics import Dynamics, UNet
 from sticky_action_env import StickyActionEnv
 from utils import random_agent_ob_mean_std
@@ -146,10 +147,14 @@ def make_env_all_params(rank, add_monitor, args):
             env = make_robo_pong()
         elif args["env"] == "hockey":
             env = make_robo_hockey()
+    elif args["env_kind"] == "dmlab":
+        env = make_dmlab(args["env"], args["ep_path"])
 
     if add_monitor:
         env = Monitor(env, osp.join(logger.get_dir(), '%.2i' % rank))
     return env
+
+
 
 
 def get_experiment_environment(**args):
@@ -175,6 +180,7 @@ def add_environments_params(parser):
     parser.add_argument('--env_kind', type=str, default="atari")
     parser.add_argument('--noop_max', type=int, default=30)
     parser.add_argument('--ep_path', type=str)
+
 
 
 def add_optimization_params(parser):
