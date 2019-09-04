@@ -31,7 +31,7 @@ import numpy as np
 import deepmind_lab
 import cv2
 
-from atari_wrappers import StickyActionEnv
+from sticky_action_env import StickyActionEnv
 from collect_gym_dataset import CollectGymDataset
 
 
