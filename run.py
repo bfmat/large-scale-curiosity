@@ -18,8 +18,9 @@ from auxiliary_tasks import FeatureExtractor, InverseDynamics, VAE, JustPixels
 from cnn_policy import CnnPolicy
 from collect_gym_dataset import CollectGymDataset
 from cppo_agent import PpoOptimizer
-from dmlab_utils import make_dmlab
+#from dmlab_utils import make_dmlab
 from dynamics import Dynamics, UNet
+from minecraft_wrappers import Minecraft
 from sticky_action_env import StickyActionEnv
 from utils import random_agent_ob_mean_std
 from wrappers import MontezumaInfoWrapper, make_mario_env, make_robo_pong, make_robo_hockey, \
@@ -149,6 +150,8 @@ def make_env_all_params(rank, add_monitor, args):
             env = make_robo_hockey()
     elif args["env_kind"] == "dmlab":
         env = make_dmlab(args["env"], args["ep_path"])
+    elif args["env_kind"] == "minecraft":
+        env = Minecraft('MineRLTreechop-v0', 'treechop')
 
     if add_monitor:
         env = Monitor(env, osp.join(logger.get_dir(), '%.2i' % rank))
